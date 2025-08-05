@@ -1,53 +1,3 @@
-local player = game.Players.LocalPlayer
-local muscleEvent = player:WaitForChild("muscleEvent")
-local replicatedStorage = game:GetService("ReplicatedStorage")
-
-_G.fastGrindActive = true -- Agora a flag é usada de verdade
-
--- Função: Remover todos os pets
-local function unequipPets()
-    for _, folder in pairs(player.petsFolder:GetChildren()) do
-        if folder:IsA("Folder") then
-            for _, pet in pairs(folder:GetChildren()) do
-                replicatedStorage.rEvents.equipPetEvent:FireServer("unequipPet", pet)
-            end
-        end
-    end
-    task.wait(0.1)
-end
-
--- Função: Equipar pets pelo nome
-local function equipPetsByName(name)
-    unequipPets()
-    task.wait(0.01)
-    for _, pet in pairs(player.petsFolder.Unique:GetChildren()) do
-        if pet.Name == name then
-            replicatedStorage.rEvents.equipPetEvent:FireServer("equipPet", pet)
-        end
-    end
-end
-
--- Encontrar o assento da Jungle Bar Lift
-local function getJungleBarLiftSeat()
-    local machines = workspace:FindFirstChild("machinesFolder")
-    if machines then
-        local lift = machines:FindFirstChild("Jungle Bar Lift")
-        if lift then
-            return lift:FindFirstChild("interactSeat")
-        end
-    end
-    return nil
-end
-
--- Alternativa segura ao pressE para mobile
-local function sitCharacter()
-    local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
-    if humanoid then
-        humanoid.Sit = true
-    end
-end
-
--- Loop principal
 local function fastTrainAndRebirthLoop()
     while _G.fastGrindActive do
         equipPetsByName("Swift Samurai")
@@ -66,12 +16,15 @@ local function fastTrainAndRebirthLoop()
             task.wait(0.5)
         end
 
+        -- 🟡 VERIFICAÇÃO ADICIONAL
         while player.leaderstats.Strength.Value < strengthTarget and _G.fastGrindActive do
             for _ = 1, 10 do
                 muscleEvent:FireServer("rep")
             end
             task.wait(0.01)
         end
+
+        if not _G.fastGrindActive then break end
 
         equipPetsByName("Tribal Overlord")
         task.wait(0.2)
@@ -85,6 +38,3 @@ local function fastTrainAndRebirthLoop()
         task.wait(0.5)
     end
 end
-
--- Iniciar loop
-task.spawn(fastTrainAndRebirthLoop)
