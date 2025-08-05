@@ -2,8 +2,7 @@ local player = game.Players.LocalPlayer
 local muscleEvent = player:WaitForChild("muscleEvent")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 
-_G.fastGrindActive = false -- Controle global
-
+_G.fastGrindActive = true -- Agora a flag é usada de verdade
 
 -- Função: Remover todos os pets
 local function unequipPets()
@@ -40,17 +39,17 @@ local function getJungleBarLiftSeat()
     return nil
 end
 
--- Simular tecla E
-local function pressE()
-    local vim = game:GetService("VirtualInputManager")
-    vim:SendKeyEvent(true, "E", false, game)
-    task.wait(0.05)
-    vim:SendKeyEvent(false, "E", false, game)
+-- Alternativa segura ao pressE para mobile
+local function sitCharacter()
+    local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+    if humanoid then
+        humanoid.Sit = true
+    end
 end
 
 -- Loop principal
 local function fastTrainAndRebirthLoop()
-    while true do
+    while _G.fastGrindActive do
         equipPetsByName("Swift Samurai")
 
         local rebirths = player.leaderstats.Rebirths.Value
@@ -63,10 +62,11 @@ local function fastTrainAndRebirthLoop()
         local seat = getJungleBarLiftSeat()
         if seat then
             player.Character.HumanoidRootPart.CFrame = seat.CFrame * CFrame.new(0, 3, 0)
-            repeat task.wait(0.1) pressE() until player.Character.Humanoid.Sit
+            sitCharacter()
+            task.wait(0.5)
         end
 
-        while player.leaderstats.Strength.Value < strengthTarget do
+        while player.leaderstats.Strength.Value < strengthTarget and _G.fastGrindActive do
             for _ = 1, 10 do
                 muscleEvent:FireServer("rep")
             end
@@ -80,25 +80,11 @@ local function fastTrainAndRebirthLoop()
         repeat
             replicatedStorage.rEvents.rebirthRemote:InvokeServer("rebirthRequest")
             task.wait(0.1)
-        until player.leaderstats.Rebirths.Value > before
+        until player.leaderstats.Rebirths.Value > before or not _G.fastGrindActive
 
         task.wait(0.5)
     end
 end
 
+-- Iniciar loop
 task.spawn(fastTrainAndRebirthLoop)
-
-    end
-end
-
--- Parar
-local function stopGrind()
-    _G.fastGrindActive = false
-end
-
--- Exemplo de como usar
--- Para ligar:
--- startGrind()
-
--- Para desligar:
--- stopGrind()
